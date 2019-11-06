@@ -105,16 +105,12 @@ function getNextToken(curr: ICurrent): Token | undefined {
 
 	{
 		const commentChar = char + curr.input[curr.pos + 1];
-		logger.debug("checking for comments", JSON.stringify(commentChar));
+		logger.debug("Checking for Comments", JSON.stringify(commentChar));
 		if (Comments.FullLineComment.identifier.test(commentChar)) {
-			logger.debug("it was a fullLineComment");
-
 			return new Token(TokenTypes.Comment, getFullLineComment(curr));
 		}
 
 		if (Comments.InLineCommentOpen.identifier.test(commentChar)) {
-			logger.debug("it was a inlinecomment");
-
 			return new Token(TokenTypes.Comment, getInlineComment(curr));
 		}
 	}
@@ -160,7 +156,6 @@ function getInlineComment(curr: ICurrent): string {
 
 	// execute while ADD DOCUMENTATION
 	while (typeof char === "string" && !Comments.InlineCommentClose.identifier.test(preChar + char)) {
-		console.log("l start", preChar, char);
 		out += char; // append current char to out
 		curr.pos++; // increment current Position
 
@@ -172,8 +167,6 @@ function getInlineComment(curr: ICurrent): string {
 		curr.pos++; // increment to move past "/" of "*/"
 		out = out.replace(/\*$/i, ""); // remove the "*" of "*/" - it is there, because in that run, the regexp didnt fire
 	}
-
-	console.log("l end", preChar, char, JSON.stringify(curr.input.slice(curr.pos)));
 
 	return out;
 }
