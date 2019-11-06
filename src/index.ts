@@ -25,3 +25,12 @@ export async function compile(filename: string): Promise<string> {
 	// 	)
 	// );
 }
+
+export async function interpert(input: string): Promise<string> {
+	const tokens = await tokenizer(input);
+	console.log("Final Tokens:", tokens);
+	const transformed = await transform(tokens);
+	const output = await generate(transformed);
+
+	return output;
+}
