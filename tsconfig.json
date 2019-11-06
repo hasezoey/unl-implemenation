@@ -1,0 +1,31 @@
+{
+	"compileOnSave": true,
+	"typeAcquisition": {
+		"enable": true
+	},
+	"compilerOptions": {
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true,
+		"declarationMap": true,
+		"outDir": "build",
+		"moduleResolution": "node",
+		"target": "es6",
+		"module": "commonjs",
+		"newLine": "LF",
+		"sourceMap": true,
+		"removeComments": true,
+		"strict": true,
+		"allowUnreachableCode": false,
+		"pretty": true,
+		"declaration": true,
+		"incremental": true,
+		"tsBuildInfoFile": "./.tsbuildinfo",
+		"lib": [
+			"esnext"
+		]
+	},
+	"include": [
+		"src/**/*",
+		"test/**/*"
+	]
+}

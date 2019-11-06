@@ -1,0 +1,11 @@
+# Folders 
+node_modules/
+.nyc_output/
+lib/
+doc/
+public/
+coverage/
+build/
+
+# Files
+.tsbuildinfo
