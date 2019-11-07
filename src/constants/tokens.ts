@@ -2,11 +2,11 @@ import {
 	ampersandOperator, EqualsOperator, exclamationMarkOperator, fullLineComment, greaterThanOperator, inLineCommentEnd, inLineCommentStart, lowerThanOperator, namesStartWith, newLineOrSemi, numbers, seperator, strings, stringVariants, verticalLineOperator, whiteSpace
 } from "./regex";
 
-class TokenType<T extends string | RegExp | any> {
+class TokenType<T extends string | RegExp | undefined> {
 	constructor(
 		public readonly identifier: T,
 		public readonly type: TokenTypes,
-		public readonly variants?: RegExp[]
+		public readonly variants: RegExp[] = []
 	) { }
 }
 

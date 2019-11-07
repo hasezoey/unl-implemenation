@@ -1,5 +1,6 @@
 import { format, isNullOrUndefined } from "util";
 import { logger } from ".";
+import { TokenError } from "./constants/errors";
 import { dot, hexNumber, namesUntilEnd, newLine } from "./constants/regex";
 import { Blocks, Comments, MathOperators, Misc, Operators, Token, TokenTypes } from "./constants/tokens";
 import { ICurrent } from "./types";
@@ -13,7 +14,7 @@ export function tokenizer(input: string): Token[] {
 	assert(typeof input === "string", "Input must be a string!");
 	assert(input.length > 0, "Input length must be higher than 0!");
 
-	logger.warn("Input string:", JSON.stringify(input));
+	logger.info("Input string:", JSON.stringify(input));
 
 	const curr: ICurrent = { // this is needed, because otherwise the functions would just take a copy of the primitive
 		pos: 0,
@@ -46,7 +47,7 @@ export function tokenizer(input: string): Token[] {
  */
 function getNextToken(curr: ICurrent): Token | undefined {
 	const char = curr.input[curr.pos];
-	logger.debug("getNextToken Current Character: \"%s\"", (char + "").replace(newLine, "\\n"));
+	logger.debug("getNextToken Current Character:", JSON.stringify(char));
 	if (isNullOrUndefined(char)) {
 		curr.pos++;
 
@@ -131,7 +132,7 @@ function getNextToken(curr: ICurrent): Token | undefined {
 		return new Token(TokenTypes.Seperator, char);
 	}
 
-	throw new Error(format("Unkown Token Encountered: \"%s\"", char));
+	throw new TokenError(format("Unkown Token Encountered:", JSON.stringify(char)));
 }
 
 /**
@@ -165,7 +166,7 @@ function getNumberUntilEnd(curr: ICurrent): string {
 	// execute while "char" is a string AND while "char" is a number
 	while (typeof char === "string" && (Misc.Number.identifier.test(char) || dot.test(char))) {
 		if (dot.test(char)) {
-			if (isDecimal) throw new Error("\".\" was unexpected to be seen again!");
+			if (isDecimal) throw new TokenError("\".\" was unexpected to be seen again!");
 			isDecimal = true;
 		}
 		out += char; // append current char to out
@@ -219,6 +220,7 @@ function getInlineComment(curr: ICurrent): string {
 		char = curr.input[curr.pos]; // set new char
 	}
 
+	// this is protection against EOF
 	if (Comments.InlineCommentClose.identifier.test(preChar + char)) {
 		curr.pos++; // increment to move past "/" of "*/"
 		out = out.replace(/\*$/i, ""); // remove the "*" of "*/" - it is there, because in that run, the regexp didnt fire
@@ -256,7 +258,7 @@ function getStringUntilEnd(curr: ICurrent): string {
 	let out = "";
 	/** Current Char to work on */
 	let char = curr.input[curr.pos];
-	const stringEndTest = Misc.String.variants?.find((v) => v.test(char));
+	const stringEndTest = Misc.String.variants.find((v) => v.test(char));
 	assert(!isNullOrUndefined(stringEndTest), "Expected \"charToTest\" to be defined");
 
 	if ( // Test if it is a multiline string
@@ -277,10 +279,11 @@ function getStringUntilEnd(curr: ICurrent): string {
 	}
 	logger.debug("GSUE", out);
 
-	// increment current position again, because of the closing string token
-	if (stringEndTest.test(char)) {
-		curr.pos++;
+	if (!stringEndTest.test(char)) {
+		throw new TokenError("Expected String to end before a EOL / EOF!");
 	}
+
+	curr.pos++; // increment current position again to skip the end char of the string
 
 	return out;
 }
@@ -326,17 +329,14 @@ function getIndent(curr: ICurrent): string {
 	let pos = curr.pos - 4; // to remove the intial 3 again, and to move one back from the first String opening
 	let indentChar = curr.input[pos]; // set inital current char for indent search
 
-	// execute while "indentChar" is a string AND while "indentChar" is NOT a newline AND while "pos - 1"'s character is not a newline
-	while (typeof indentChar === "string" && (!newLine.test(curr.input[pos - 1]) && !newLine.test(indentChar))) {
+	// execute while "indentChar" is a string AND while "indentChar" is NOT a newline
+	while (typeof indentChar === "string" && !newLine.test(indentChar)) {
 		pos--; // decrement pos to get next char
 		indentChar = curr.input[pos]; // set next char
 	}
 
-	if (!newLine.test(indentChar)) {
-		// get fill line to replace later
-		return curr.input.slice(pos - 1, curr.pos - 3);
-	}
+	const out = curr.input.slice(pos, curr.pos - 3);
+	logger.debug("OUT", JSON.stringify(out));
 
-	// edge-case: when the newline is encountered immediatly, set it the the indentChar
-	return indentChar;
+	return out;
 }

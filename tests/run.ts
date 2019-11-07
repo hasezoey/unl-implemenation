@@ -1,4 +1,5 @@
-import { logger, transpile } from "./index";
+// this file is used to transpile code from specified .unl files
+import { logger, transpile } from "../src/index";
 
 process.on("unhandledRejection", (err) => {
 	console.error(err);

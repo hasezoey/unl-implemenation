@@ -26,7 +26,7 @@ export async function transpile(filename: string): Promise<string> {
 	// );
 }
 
-export async function interpert(input: string): Promise<string> {
+export async function interpret(input: string): Promise<string> {
 	const tokens = await tokenizer(input);
 	console.log("Final Tokens:", tokens);
 	const transformed = await transform(tokens);
