@@ -1,0 +1,49 @@
+language: node_js
+node_js: [
+  # check Latest
+  13,
+  # check least supported
+  12,
+]
+script: | # this has to be used, otherwise it executes the tests twice (because of "default build script")
+  npm run test:coverage
+  if [ $? -ne 0 ]; then exit 1; fi # this is added because sometimes it fails and exists with 0 in travis
+  if [ $TRAVIS_NODE_VERSION == "12" ]; then codecov; fi
+stages:
+  - compile
+  - test
+  # - deploy
+jobs:
+  include:
+    - name: 'Test Compile Ability'
+      stage: compile
+      node_js: 12
+      script: |
+        (npm audit || exit 0)
+        npm run lint
+        npm run build # build tests too to check if errors from tsc are present
+    # - name: 'Deploy to NPM'
+    #   stage: deploy
+    #   if: tag IS present AND NOT type IN (pull_request)
+    #   script: skip
+    #   deploy:
+    #     provider: npm
+    #     email: $DEPLOY_NPM_EMAIL
+    #     tag: latest
+    #     skip_cleanup: true
+    #     api_key: $DEPLOY_NPM_KEY
+    #     on:
+    #       tags: true
+    # - name: 'Deploy to GitHub Pages'
+    #   stage: deploy
+    #   if: branch IN (master) AND NOT type IN (pull_request) # i know this redundant, but it is needed otherwise the test will always create a deploy of this
+    #   script: bash ./ghPagesPre.sh
+    #   deploy:
+    #     provider: pages
+    #     skip_cleanup: true
+    #     github_token: $GITHUB_GH_PAGES
+    #     keep_history: false
+    #     target_branch: gh-pages # i know this the default, but just to be sure
+    #     on:
+    #       branch:
+    #         - master
