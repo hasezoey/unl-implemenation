@@ -22,7 +22,7 @@ export function tokenizer(input: string): Token[] {
 		input
 	};
 
-	tokenLoop: while (curr.pos < input.length + 1) {
+	while (curr.pos <= input.length) {
 		logger.debug("Loop Start, Current Position %d", curr.pos);
 		const pre = curr.pos;
 
@@ -32,10 +32,10 @@ export function tokenizer(input: string): Token[] {
 			curr.tokens.push(newToken);
 		}
 		logger.debug("Loop End, Current Position %d, Loop Start Position %d \n", curr.pos, pre);
+
 		if (curr.pos === pre) {
 			throw new Error("Previous Position is the same as Current Position!");
 		}
-		// break;
 	}
 
 	return curr.tokens;

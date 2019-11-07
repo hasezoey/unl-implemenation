@@ -3,19 +3,6 @@ import { TokenError } from "../src/constants/errors";
 import { Token, TokenTypes } from "../src/constants/tokens";
 
 describe("Tokenizer", () => {
-	it("should correctly map variable assignment", () => {
-		const output = tokenizer("const hello = \"Hello World\"");
-
-		expect(output).toBeArray();
-		expect(output).toStrictEqual([
-			new Token(TokenTypes.Name, "const"),
-			new Token(TokenTypes.Name, "hello"),
-			new Token(TokenTypes.Operator, "="),
-			new Token(TokenTypes.String, "Hello World"),
-			new Token(TokenTypes.EOF, "")
-		]);
-	});
-
 	describe("numbers", () => {
 		it("should correctly map normal numbers", () => {
 			const output = tokenizer("const key = 123456789");
@@ -276,6 +263,82 @@ describe("Tokenizer", () => {
 				new Token(TokenTypes.Number, "1"),
 				new Token(TokenTypes.Operator, "%"),
 				new Token(TokenTypes.Number, "1"),
+				new Token(TokenTypes.EOF, "")
+			]);
+		});
+	});
+
+	describe("operators", () => {
+		it("should correctly map equals", () => {
+			const output = tokenizer("const hello = \"Hello World\"");
+
+			expect(output).toBeArray();
+			expect(output).toStrictEqual([
+				new Token(TokenTypes.Name, "const"),
+				new Token(TokenTypes.Name, "hello"),
+				new Token(TokenTypes.Operator, "="),
+				new Token(TokenTypes.String, "Hello World"),
+				new Token(TokenTypes.EOF, "")
+			]);
+		});
+
+		it("should correctly map GreaterThan", () => {
+			const output = tokenizer("1 > 1");
+
+			expect(output).toBeArray();
+			expect(output).toStrictEqual([
+				new Token(TokenTypes.Number, "1"),
+				new Token(TokenTypes.Operator, ">"),
+				new Token(TokenTypes.Number, "1"),
+				new Token(TokenTypes.EOF, "")
+			]);
+		});
+
+		it("should correctly map LowerThan", () => {
+			const output = tokenizer("1 < 1");
+
+			expect(output).toBeArray();
+			expect(output).toStrictEqual([
+				new Token(TokenTypes.Number, "1"),
+				new Token(TokenTypes.Operator, "<"),
+				new Token(TokenTypes.Number, "1"),
+				new Token(TokenTypes.EOF, "")
+			]);
+		});
+
+		it("should correctly map ExclamationMark", () => {
+			const output = tokenizer("!true");
+
+			expect(output).toBeArray();
+			expect(output).toStrictEqual([
+				new Token(TokenTypes.Operator, "!"),
+				new Token(TokenTypes.Name, "true"),
+				new Token(TokenTypes.EOF, "")
+			]);
+		});
+
+		it("should correctly map VerticalLine", () => {
+			const output = tokenizer("true || true");
+
+			expect(output).toBeArray();
+			expect(output).toStrictEqual([
+				new Token(TokenTypes.Name, "true"),
+				new Token(TokenTypes.Operator, "|"),
+				new Token(TokenTypes.Operator, "|"),
+				new Token(TokenTypes.Name, "true"),
+				new Token(TokenTypes.EOF, "")
+			]);
+		});
+
+		it("should correctly map Ampersand", () => {
+			const output = tokenizer("true && true");
+
+			expect(output).toBeArray();
+			expect(output).toStrictEqual([
+				new Token(TokenTypes.Name, "true"),
+				new Token(TokenTypes.Operator, "&"),
+				new Token(TokenTypes.Operator, "&"),
+				new Token(TokenTypes.Name, "true"),
 				new Token(TokenTypes.EOF, "")
 			]);
 		});
