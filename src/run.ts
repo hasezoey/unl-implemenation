@@ -1,9 +1,9 @@
-import { compile, logger } from "./index";
+import { logger, transpile } from "./index";
 
 process.on("unhandledRejection", (err) => {
 	console.error(err);
 });
 
 logger.setLevel("DEBUG");
-compile("./testCode/basic.unl");
+transpile("./testCode/basic.unl");
 // compile("./testCode/string.unl");

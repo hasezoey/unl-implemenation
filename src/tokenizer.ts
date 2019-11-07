@@ -1,27 +1,15 @@
 import { format, isNullOrUndefined } from "util";
 import { logger } from ".";
-import { namesUntilEnd, newLine } from "./constants/regex";
-import { Blocks, Comments, Misc, Operators, TokenTypes } from "./constants/tokens";
-import { assert } from "./utils";
-
-class Token {
-	constructor(
-		public readonly type: TokenTypes,
-		public readonly value: TokenTypes | string
-	) { }
-}
-
-interface ICurrent {
-	pos: number;
-	tokens: Token[];
-	input: string;
-}
+import { dot, hexNumber, namesUntilEnd, newLine } from "./constants/regex";
+import { Blocks, Comments, MathOperators, Misc, Operators, Token, TokenTypes } from "./constants/tokens";
+import { ICurrent } from "./types";
+import { assert, incrementCurr } from "./utils";
 
 /**
  * Convert input string to a Token Array
  * @param input Input of a file or REPL
  */
-export async function tokenizer(input: string): Promise<Token[]> {
+export function tokenizer(input: string): Token[] {
 	assert(typeof input === "string", "Input must be a string!");
 	assert(input.length > 0, "Input length must be higher than 0!");
 
@@ -72,19 +60,17 @@ function getNextToken(curr: ICurrent): Token | undefined {
 
 	switch (char) {
 		case Blocks.OpenBrace.identifier:
-			curr.pos++;
-
-			return new Token(TokenTypes.Enclosure, char);
 		case Blocks.OpenBracket.identifier:
-			curr.pos++;
-
-			return new Token(TokenTypes.Enclosure, char);
 		case Blocks.OpenParentheses.identifier:
+		case Blocks.CloseBrace.identifier:
+		case Blocks.CloseBracket.identifier:
+		case Blocks.CloseParentheses.identifier:
 			curr.pos++;
 
 			return new Token(TokenTypes.Enclosure, char);
 	}
 
+	// characters, names & numbers
 	if (Misc.WhiteSpace.identifier.test(char)) {
 		curr.pos++;
 
@@ -96,13 +82,11 @@ function getNextToken(curr: ICurrent): Token | undefined {
 	if (Misc.Name.identifier.test(char)) {
 		return new Token(TokenTypes.Name, getNameUntilEnd(curr));
 	}
-
-	if (Operators.Assign.identifier.test(char)) {
-		curr.pos++;
-
-		return new Token(TokenTypes.Operator, char);
+	if (Misc.Number.identifier.test(char)) {
+		return new Token(TokenTypes.Number, getNumberUntilEnd(curr));
 	}
 
+	// Comments
 	{
 		const commentChar = char + curr.input[curr.pos + 1];
 		logger.debug("Checking for Comments", JSON.stringify(commentChar));
@@ -115,7 +99,80 @@ function getNextToken(curr: ICurrent): Token | undefined {
 		}
 	}
 
+	// Operators
+	if (
+		Operators.Equals.identifier.test(char)
+		|| Operators.ExclamationMark.identifier.test(char)
+		|| Operators.GreaterThan.identifier.test(char)
+		|| Operators.LowerThan.identifier.test(char)
+		|| Operators.VerticalLine.identifier.test(char)
+		|| Operators.Ampersand.identifier.test(char)
+	) {
+		curr.pos++;
+
+		return new Token(TokenTypes.Operator, char);
+	}
+
+	// Math Operators
+	switch (char) {
+		case MathOperators.Plus.identifier:
+		case MathOperators.Minus.identifier:
+		case MathOperators.Multiply.identifier:
+		case MathOperators.Devide.identifier:
+		case MathOperators.Percent.identifier:
+			curr.pos++;
+
+			return new Token(TokenTypes.Operator, char);
+	}
+
+	if (Misc.Seperator.identifier.test(char)) {
+		curr.pos++;
+
+		return new Token(TokenTypes.Seperator, char);
+	}
+
 	throw new Error(format("Unkown Token Encountered: \"%s\"", char));
+}
+
+/**
+ * Get the current Number until end
+ * @param curr The Object with the ICurrent Context
+ */
+function getNumberUntilEnd(curr: ICurrent): string {
+	/** The String that will get returned */
+	let out = "";
+	/** Current Char to work on */
+	let char = curr.input[curr.pos];
+
+	// test if the number is a hex number ("0xF")
+	if (char === "0" && curr.input[curr.pos + 1] === "x") {
+		out += "0x";
+		curr.pos += 2;
+		char = curr.input[curr.pos];
+
+		// execute while "char" is a string AND while "char" matches a hex number
+		while (typeof char === "string" && hexNumber.test(char)) {
+			out += char;
+			char = incrementCurr(curr);
+		}
+
+		return out;
+	}
+
+	/** Store if already in the decimal mode */
+	let isDecimal = false;
+
+	// execute while "char" is a string AND while "char" is a number
+	while (typeof char === "string" && (Misc.Number.identifier.test(char) || dot.test(char))) {
+		if (dot.test(char)) {
+			if (isDecimal) throw new Error("\".\" was unexpected to be seen again!");
+			isDecimal = true;
+		}
+		out += char; // append current char to out
+		char = incrementCurr(curr);
+	}
+
+	return out;
 }
 
 /**
@@ -133,8 +190,7 @@ function getFullLineComment(curr: ICurrent): string {
 	// execute while "char" is a string AND while "char" is NOT a newline
 	while (typeof char === "string" && !newLine.test(char)) {
 		out += char; // append current char to out
-		curr.pos++; // increment current Position
-		char = curr.input[curr.pos]; // set new char
+		char = incrementCurr(curr);
 	}
 	// Do NOT increment if there is a new line - for the new-line token
 
@@ -154,7 +210,7 @@ function getInlineComment(curr: ICurrent): string {
 	let char = curr.input[curr.pos];
 	let preChar = "";
 
-	// execute while ADD DOCUMENTATION
+	// execute while "char" is a string AND while it is NOT an Inline Comment Close
 	while (typeof char === "string" && !Comments.InlineCommentClose.identifier.test(preChar + char)) {
 		out += char; // append current char to out
 		curr.pos++; // increment current Position
@@ -184,8 +240,7 @@ function getNameUntilEnd(curr: ICurrent): string {
 	// execute while "char" is not a whitespace AND is not a newline / semicolon AND while "char" is a string
 	while (typeof char === "string" && namesUntilEnd.test(char)) {
 		out += char; // append current char to out
-		curr.pos++; // increment current Position
-		char = curr.input[curr.pos]; // set new char
+		char = incrementCurr(curr);
 	}
 	logger.debug("GNUE \"%s\"", out);
 
@@ -204,14 +259,21 @@ function getStringUntilEnd(curr: ICurrent): string {
 	const stringEndTest = Misc.String.variants?.find((v) => v.test(char));
 	assert(!isNullOrUndefined(stringEndTest), "Expected \"charToTest\" to be defined");
 
+	if ( // Test if it is a multiline string
+		stringEndTest.test(char)
+		&& stringEndTest.test(curr.input[curr.pos + 1])
+		&& stringEndTest.test(curr.input[curr.pos + 2])
+	) {
+		return getMultiLineStringUntilEnd(curr, stringEndTest);
+	}
+
 	curr.pos++; // increment initally to skip the inital quotation mark
 	char = curr.input[curr.pos]; // set the current char to the increment above
 
 	// execute while "char" is not a whitespace AND is not a newline / semicolon AND while "char" is a string
 	while (typeof char === "string" && !(stringEndTest.test(char) || newLine.test(char))) {
 		out += char; // append current char to out
-		curr.pos++; // increment current Position
-		char = curr.input[curr.pos]; // set new char
+		char = incrementCurr(curr);
 	}
 	logger.debug("GSUE", out);
 
@@ -221,4 +283,60 @@ function getStringUntilEnd(curr: ICurrent): string {
 	}
 
 	return out;
+}
+
+/**
+ * Get Full Multiline string
+ * @param curr The Object with the ICurrent Context
+ * @param testFor The RegExp to know when the string ends
+ */
+function getMultiLineStringUntilEnd(curr: ICurrent, testFor: RegExp): string {
+	logger.info("Encountered a Multiline String");
+	curr.pos += 3; // skip the inital 3 testFor's (mostly: """)
+
+	/** What to remove */
+	const indent = getIndent(curr);
+
+	/** Current Char to work on */
+	let char = curr.input[curr.pos];
+	/** The String that will get returned */
+	let out = "";
+
+	// execute while "char" is a string AND while NOT 3 of testFor is encountered (""")
+	while (typeof char === "string" && !(
+		testFor.test(char)
+		&& testFor.test(curr.input[curr.pos + 1])
+		&& testFor.test(curr.input[curr.pos + 2])
+	)) {
+		out += char; // append current char to out
+		char = incrementCurr(curr);
+	}
+
+	out = out.replace(new RegExp(indent, "gmi"), ""); // replace all occurences of "indent" in "out"
+	curr.pos += 3; // skip the ending 3 testFor's (mostly: """)
+
+	return out;
+}
+
+/**
+ * Get Indentation for multiline String
+ * @param curr The Object with the ICurrent Context
+ */
+function getIndent(curr: ICurrent): string {
+	let pos = curr.pos - 4; // to remove the intial 3 again, and to move one back from the first String opening
+	let indentChar = curr.input[pos]; // set inital current char for indent search
+
+	// execute while "indentChar" is a string AND while "indentChar" is NOT a newline AND while "pos - 1"'s character is not a newline
+	while (typeof indentChar === "string" && (!newLine.test(curr.input[pos - 1]) && !newLine.test(indentChar))) {
+		pos--; // decrement pos to get next char
+		indentChar = curr.input[pos]; // set next char
+	}
+
+	if (!newLine.test(indentChar)) {
+		// get fill line to replace later
+		return curr.input.slice(pos - 1, curr.pos - 3);
+	}
+
+	// edge-case: when the newline is encountered immediatly, set it the the indentChar
+	return indentChar;
 }

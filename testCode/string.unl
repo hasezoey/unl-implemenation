@@ -1,1 +1,7 @@
-    "\n\r\u"
+"Hello"
+
+const hi = 
+	"""
+	Multiline Comment\n
+		2 Indent
+	"""
