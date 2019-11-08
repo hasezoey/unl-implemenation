@@ -8,32 +8,12 @@ export const namesUntilEnd = /[a-z0-9_]/i; // matches all text-characters and al
 
 export const newLine = /\n|\r|\r\n/i; // matches a new line (LF | CRLF)
 
-export const newLineOrSemi = /\n|\r|;|\r\n/i; // matches a new line (LF | CRLF) or an semicolon
-
-export const EqualsOperator = /=/i; // matches "="
-
-export const greaterThanOperator = />/i; // matches ">"
-export const lowerThanOperator = /</i; // matches "<"
-
-export const exclamationMarkOperator = /!/i; // matches "!"
-
-export const verticalLineOperator = /\|/i; // matches "|"
-export const ampersandOperator = /&/i; // matches "&"
-
-// export const plusOperator = /\+/i; // matches "+"
-// export const minusOperator = /-/i; // matches "-"
-// export const multiplyOperator = /\*/i; // matches "*"
-// export const devideOperator = /\//i; // matches "/"
-// export const percentOperator = /%/i; // matches "%"
-
 export const strings = /"|`/i; // matches " and `
 
 export const fullLineComment = /\/\//i; // matches "//"
 
 export const inLineCommentStart = /\/\*/i; // matches "/*"
 export const inLineCommentEnd = /\*\//i; // matches "*/"
-
-export const seperator = /,/i; // matches ","
 
 export const stringVariants = [/"/i, /`/i];
 

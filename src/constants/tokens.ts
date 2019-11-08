@@ -1,5 +1,5 @@
 import {
-	ampersandOperator, EqualsOperator, exclamationMarkOperator, fullLineComment, greaterThanOperator, inLineCommentEnd, inLineCommentStart, lowerThanOperator, namesStartWith, newLineOrSemi, numbers, seperator, strings, stringVariants, verticalLineOperator, whiteSpace
+	fullLineComment, inLineCommentEnd, inLineCommentStart, namesStartWith, newLine, numbers, strings, stringVariants, whiteSpace
 } from "./regex";
 
 class TokenType<T extends string | RegExp | undefined> {
@@ -9,20 +9,6 @@ class TokenType<T extends string | RegExp | undefined> {
 		public readonly variants: RegExp[] = []
 	) { }
 }
-
-// class KeywordTokenType extends TokenType { }
-
-// export enum TokenTypes {
-// 	Parentheses,
-// 	Bracket,
-// 	Brace,
-// 	FullLineComment,
-// 	InlineComment,
-// 	Operator,
-// 	VariablePrefix,
-// 	Variable,
-// 	Name
-// }
 
 export enum TokenTypes {
 	Enclosure,
@@ -59,8 +45,9 @@ export const Misc = {
 	Name: new TokenType(namesStartWith, TokenTypes.Name), // includes "const", "let", "true", "false" - and everything else that is matching the pattern
 	WhiteSpace: new TokenType(whiteSpace, TokenTypes.Empty),
 	EndOfFile: new TokenType(undefined, TokenTypes.EOF),
-	EndOfLine: new TokenType(newLineOrSemi, TokenTypes.EOL),
-	Seperator: new TokenType(seperator, TokenTypes.Seperator)
+	EndOfLine: new TokenType(newLine, TokenTypes.EOL),
+	Semicolon: new TokenType(";", TokenTypes.Seperator),
+	Comma: new TokenType(",", TokenTypes.Seperator)
 };
 
 /**
@@ -76,12 +63,12 @@ export const Comments = {
  * Includes all Operators
  */
 export const Operators = {
-	Equals: new TokenType(EqualsOperator, TokenTypes.Operator),
-	GreaterThan: new TokenType(greaterThanOperator, TokenTypes.Operator),
-	LowerThan: new TokenType(lowerThanOperator, TokenTypes.Operator),
-	ExclamationMark: new TokenType(exclamationMarkOperator, TokenTypes.Operator),
-	VerticalLine: new TokenType(verticalLineOperator, TokenTypes.Operator),
-	Ampersand: new TokenType(ampersandOperator, TokenTypes.Operator)
+	Equals: new TokenType("=", TokenTypes.Operator),
+	GreaterThan: new TokenType(">", TokenTypes.Operator),
+	LowerThan: new TokenType("<", TokenTypes.Operator),
+	ExclamationMark: new TokenType("!", TokenTypes.Operator),
+	VerticalLine: new TokenType("|", TokenTypes.Operator),
+	Ampersand: new TokenType("&", TokenTypes.Operator)
 };
 
 /**
@@ -95,20 +82,9 @@ export const MathOperators = {
 	Percent: new TokenType("%", TokenTypes.Operator)
 };
 
-// export const Keywords = {
-// 	ConstantVariable: new KeywordTokenType("const", TokenTypes.VariablePrefix),
-// 	ScopedVariable: new KeywordTokenType("let", TokenTypes.VariablePrefix)
-// };
-
-// export const Comments = {
-// 	FullLineComment: new TokenType("//", TokenTypes.FullLineComment),
-// 	InlineCommentStart: new TokenType("/*", TokenTypes.InlineComment),
-// 	InlineCommentEnd: new TokenType("*/", TokenTypes.InlineComment)
-// };
-
 export class Token {
 	constructor(
 		public readonly type: TokenTypes,
-		public readonly value: TokenTypes | string
+		public readonly value: string
 	) { }
 }

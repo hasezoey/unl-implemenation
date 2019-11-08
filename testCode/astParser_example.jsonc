@@ -1,0 +1,82 @@
+[ // ignore the array, this is just for intellisense in this file
+	// "const key = 1 + 2"
+	{
+		"type": "Root",
+		"body": [
+			{
+				"type": "VariableAssignment", // type of AST operation
+				"key": "key", // name of resulting variable
+				"opType": "const", // or number, what type of assignment is it? (let or const)
+				"params": [
+					{
+						"type": "NumberLiteral",
+						"value": "1"
+					},
+					{
+						"type": "PlusOperator"
+					},
+					{
+						"type": "NumberLiteral",
+						"value": "2"
+					}
+				]
+			}
+		]
+	},
+	// "const key = \"Hi String\""
+	{
+		"type": "Root",
+		"body": [
+			{
+				"type": "VariableAssignment", // type of AST operation
+				"key": "key", // name of resulting variable
+				"opType": "const", // or number, what type of assignment is it? (let or const)
+				"params": [
+					{
+						"type": "StringLiteral",
+						"value": "Hi String"
+					}
+				]
+			}
+		]
+	},
+	// "1 + 2"
+	{
+		"type": "Root",
+		"body": [
+			{
+				"type": "NumberLiteral",
+				"value": "1"
+			},
+			{
+				"type": "PlusOperator"
+			},
+			{
+				"type": "NumberLiteral",
+				"value": "2"
+			}
+		]
+	},
+	// "(true || false)"
+	{
+		"type": "Root",
+		"body": [
+			{
+				"type": "EvaluateExpression",
+				"params": [
+					{
+						"type": "BooleanLiteral",
+						"value": "true"
+					},
+					{
+						"type": "LogicalOROperator"
+					},
+					{
+						"type": "BooleanLiteral",
+						"value": "false"
+					}
+				]
+			}
+		]
+	}
+]

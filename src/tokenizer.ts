@@ -1,9 +1,9 @@
-import { format, isNullOrUndefined } from "util";
+import { isNullOrUndefined } from "util";
 import { logger } from ".";
 import { TokenError } from "./constants/errors";
 import { dot, hexNumber, namesUntilEnd, newLine } from "./constants/regex";
 import { Blocks, Comments, MathOperators, Misc, Operators, Token, TokenTypes } from "./constants/tokens";
-import { ICurrent } from "./types";
+import { ICurrentToken } from "./types";
 import { assert, incrementCurr } from "./utils";
 
 /**
@@ -16,7 +16,7 @@ export function tokenizer(input: string): Token[] {
 
 	logger.info("Input string:", JSON.stringify(input));
 
-	const curr: ICurrent = { // this is needed, because otherwise the functions would just take a copy of the primitive
+	const curr: ICurrentToken = { // this is needed, because otherwise the functions would just take a copy of the primitive
 		pos: 0,
 		tokens: [],
 		input
@@ -34,7 +34,7 @@ export function tokenizer(input: string): Token[] {
 		logger.debug("Loop End, Current Position %d, Loop Start Position %d \n", curr.pos, pre);
 
 		if (curr.pos === pre) {
-			throw new Error("Previous Position is the same as Current Position!");
+			throw new TokenError("Previous Position is the same as Current Position!");
 		}
 	}
 
@@ -45,7 +45,7 @@ export function tokenizer(input: string): Token[] {
  * The Function that gets executes in each loop
  * @param curr The Object with the ICurrent Context
  */
-function getNextToken(curr: ICurrent): Token | undefined {
+function getNextToken(curr: ICurrentToken): Token | undefined {
 	const char = curr.input[curr.pos];
 	logger.debug("getNextToken Current Character:", JSON.stringify(char));
 	if (isNullOrUndefined(char)) {
@@ -57,6 +57,11 @@ function getNextToken(curr: ICurrent): Token | undefined {
 		curr.pos++;
 
 		return new Token(TokenTypes.EOL, "");
+	}
+	if (Misc.Semicolon.identifier === char) {
+		curr.pos++;
+
+		return new Token(TokenTypes.Seperator, char);
 	}
 
 	switch (char) {
@@ -101,17 +106,16 @@ function getNextToken(curr: ICurrent): Token | undefined {
 	}
 
 	// Operators
-	if (
-		Operators.Equals.identifier.test(char)
-		|| Operators.ExclamationMark.identifier.test(char)
-		|| Operators.GreaterThan.identifier.test(char)
-		|| Operators.LowerThan.identifier.test(char)
-		|| Operators.VerticalLine.identifier.test(char)
-		|| Operators.Ampersand.identifier.test(char)
-	) {
-		curr.pos++;
+	switch (char) {
+		case Operators.Equals.identifier:
+		case Operators.ExclamationMark.identifier:
+		case Operators.GreaterThan.identifier:
+		case Operators.LowerThan.identifier:
+		case Operators.VerticalLine.identifier:
+		case Operators.Ampersand.identifier:
+			curr.pos++;
 
-		return new Token(TokenTypes.Operator, char);
+			return new Token(TokenTypes.Operator, char);
 	}
 
 	// Math Operators
@@ -126,20 +130,20 @@ function getNextToken(curr: ICurrent): Token | undefined {
 			return new Token(TokenTypes.Operator, char);
 	}
 
-	if (Misc.Seperator.identifier.test(char)) {
+	if (Misc.Comma.identifier === char) {
 		curr.pos++;
 
 		return new Token(TokenTypes.Seperator, char);
 	}
 
-	throw new TokenError(format("Unkown Token Encountered:", JSON.stringify(char)));
+	throw new TokenError("Unkown Token Encountered:", JSON.stringify(char));
 }
 
 /**
  * Get the current Number until end
  * @param curr The Object with the ICurrent Context
  */
-function getNumberUntilEnd(curr: ICurrent): string {
+function getNumberUntilEnd(curr: ICurrentToken): string {
 	/** The String that will get returned */
 	let out = "";
 	/** Current Char to work on */
@@ -180,7 +184,7 @@ function getNumberUntilEnd(curr: ICurrent): string {
  * Get the current Full-Line-Comment
  * @param curr The Object with the ICurrent Context
  */
-function getFullLineComment(curr: ICurrent): string {
+function getFullLineComment(curr: ICurrentToken): string {
 	curr.pos += 2; // increment by 2, to remove the "//"
 
 	/** The String that will get returned */
@@ -202,7 +206,7 @@ function getFullLineComment(curr: ICurrent): string {
  * Get the current In-Line-Comment
  * @param curr The Object with the ICurrent Context
  */
-function getInlineComment(curr: ICurrent): string {
+function getInlineComment(curr: ICurrentToken): string {
 	curr.pos += 2; // increment by 2, to remove "/*"
 
 	/** The String that will get returned */
@@ -233,7 +237,7 @@ function getInlineComment(curr: ICurrent): string {
  * Search until next the current name ends (like a whitespace, or operator)
  * @param curr The Object with the ICurrent Context
  */
-function getNameUntilEnd(curr: ICurrent): string {
+function getNameUntilEnd(curr: ICurrentToken): string {
 	/** The String that will get returned */
 	let out = "";
 	/** Current Char to work on */
@@ -253,7 +257,7 @@ function getNameUntilEnd(curr: ICurrent): string {
  * Search until the closing of the current string
  * @param curr The Object with the ICurrent Context
  */
-function getStringUntilEnd(curr: ICurrent): string {
+function getStringUntilEnd(curr: ICurrentToken): string {
 	/** The String that will get returned */
 	let out = "";
 	/** Current Char to work on */
@@ -293,7 +297,7 @@ function getStringUntilEnd(curr: ICurrent): string {
  * @param curr The Object with the ICurrent Context
  * @param testFor The RegExp to know when the string ends
  */
-function getMultiLineStringUntilEnd(curr: ICurrent, testFor: RegExp): string {
+function getMultiLineStringUntilEnd(curr: ICurrentToken, testFor: RegExp): string {
 	logger.info("Encountered a Multiline String");
 	curr.pos += 3; // skip the inital 3 testFor's (mostly: """)
 
@@ -318,6 +322,11 @@ function getMultiLineStringUntilEnd(curr: ICurrent, testFor: RegExp): string {
 	out = out.replace(new RegExp(indent, "gmi"), ""); // replace all occurences of "indent" in "out"
 	curr.pos += 3; // skip the ending 3 testFor's (mostly: """)
 
+	// remove NewLine if there is any before the multiline string
+	if (curr.tokens[curr.tokens.length - 1].type === TokenTypes.EOL) {
+		curr.tokens.pop();
+	}
+
 	return out;
 }
 
@@ -325,7 +334,7 @@ function getMultiLineStringUntilEnd(curr: ICurrent, testFor: RegExp): string {
  * Get Indentation for multiline String
  * @param curr The Object with the ICurrent Context
  */
-function getIndent(curr: ICurrent): string {
+function getIndent(curr: ICurrentToken): string {
 	let pos = curr.pos - 4; // to remove the intial 3 again, and to move one back from the first String opening
 	let indentChar = curr.input[pos]; // set inital current char for indent search
 

@@ -66,7 +66,6 @@ describe("Tokenizer", () => {
 				new Token(TokenTypes.Name, "const"),
 				new Token(TokenTypes.Name, "key1"),
 				new Token(TokenTypes.Operator, "="),
-				new Token(TokenTypes.EOL, ""),
 				new Token(TokenTypes.String, "LineOne\\nLineTwo"),
 				new Token(TokenTypes.EOF, "")
 			]);
@@ -74,6 +73,19 @@ describe("Tokenizer", () => {
 
 		it("should correctly map multi-line strings (newline immediatly)", () => {
 			const output = tokenizer("const key2 = \n\"\"\"\nLineOne\\n\nLineTwo\n\"\"\"");
+
+			expect(output).toBeArray();
+			expect(output).toStrictEqual([
+				new Token(TokenTypes.Name, "const"),
+				new Token(TokenTypes.Name, "key2"),
+				new Token(TokenTypes.Operator, "="),
+				new Token(TokenTypes.String, "LineOne\\nLineTwo"),
+				new Token(TokenTypes.EOF, "")
+			]);
+		});
+
+		it("should correctly map multi-line strings (multiple newlines)", () => {
+			const output = tokenizer("const key2 = \n\n\"\"\"\nLineOne\\n\nLineTwo\n\"\"\"");
 
 			expect(output).toBeArray();
 			expect(output).toStrictEqual([
