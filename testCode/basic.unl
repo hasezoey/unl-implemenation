@@ -1,3 +1,7 @@
+
+const t1 = "hi",
+			t2 = "hi2";
+
 const hello = "Hello"
 const hi1 = "WWW";
 const stringy = "\n\r\u"; // Full Line Comment

@@ -1,7 +1,7 @@
 import { readFile } from "fs";
 import { newLine } from "./constants/regex";
 
-export async function parser(filename: string): Promise<string> {
+export async function parseFile(filename: string): Promise<string> {
 	return new Promise((res, rej) => {
 		readFile(filename, (err, buffer) => {
 			if (err) rej(err);

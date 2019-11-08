@@ -1,21 +1,26 @@
 import * as logger from "loglevel";
 import "source-map-support/register";
+
+// import { astParser } from "./astParser";
+import { parseFile } from "./fileParser";
 import { generate } from "./generate";
-import { parser } from "./parser";
 import { tokenizer } from "./tokenizer";
 import { transform } from "./transformer";
 
 export { logger };
-export { tokenizer, transform, generate, parser };
+export { tokenizer, transform, generate, parseFile as parser };
 
 export async function transpile(filename: string): Promise<string> {
-	const rawInput = await parser(filename);
+	const rawInput = await parseFile(filename);
 	const tokens = tokenizer(rawInput);
 	console.log("Final Tokens:", tokens);
-	const transformed = await transform(tokens);
-	const output = await generate(transformed);
+	// const parsedAST = astParser(tokens);
+	// console.log("Final AST", parsedAST);
+	// const transformed = await transform(parsedAST);
+	// const output = await generate(transformed);
 
-	return output;
+	// return output;
+	return "";
 
 	// return await generate(
 	// 	await transform(

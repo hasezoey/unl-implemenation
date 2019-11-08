@@ -7,4 +7,4 @@ process.on("unhandledRejection", (err) => {
 
 logger.setLevel("DEBUG");
 transpile("./testCode/basic.unl");
-// compile("./testCode/string.unl");
+// transpile("./testCode/string.unl");
