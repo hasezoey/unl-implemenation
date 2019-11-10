@@ -13,9 +13,6 @@ import { assert } from "./utils";
  */
 export function astParser(tokens: Token[]): RootNode {
 	const curr: ICurrentASTParser = {
-		/** Current Index of the tokens index */
-		pos: 0,
-		/** The AST to return */
 		ast: new RootNode(),
 		tokens: tokens.slice() // copy array
 	};
@@ -25,10 +22,8 @@ export function astParser(tokens: Token[]): RootNode {
 		curr.tokens.push(new Token(TokenTypes.EOF, ""));
 	}
 
-	// while (curr.pos < curr.tokens.length) {
 	while (curr.tokens.length > 0) {
-		// const pre = curr.pos;
-		logger.debug("ast first while start, with %d to go", /* curr.pos, */ curr.tokens.length);
+		logger.debug("ast first while start, with %d to go", curr.tokens.length);
 
 		const nextToken = curr.tokens[0];
 		if (isNullOrUndefined(nextToken) || nextToken.type === TokenTypes.EOF) {
@@ -42,9 +37,6 @@ export function astParser(tokens: Token[]): RootNode {
 		}
 
 		logger.debug("ast first while end\n");
-		// if (curr.pos === pre) {
-		// 	throw new ASTParserError("Previous Position is the same as Current Position!");
-		// }
 	}
 
 	return curr.ast;
@@ -169,6 +161,7 @@ function expectToBeName(token?: Token): string | never {
 function walkDeclaration(curr: ICurrentASTParser, givenToken: Token): VariableNode {
 	logger.debug("walk dec", givenToken);
 	const id = expectToBeName(givenToken);
+	// the two block statements below are to group checks & to not "leak" variables / discarded tokens
 	// test if current token is a keyword
 	{
 		const found = Object.keys(KeyWords).find((key) => key === id);
@@ -239,5 +232,3 @@ function expectDefined(token?: Token): asserts token is Token {
 	assert(!isNullOrUndefined(token), new ASTParserError("Expected Token to be defined!"));
 	assert(token instanceof Token, new ASTParserError("Expected %s to be an instance of Token!", JSON.stringify(token)));
 }
-
-// function unexpectedKeyword()

@@ -8,7 +8,7 @@ export interface ICurrentToken {
 }
 
 export interface ICurrentASTParser {
-	pos: number;
+	/** The AST to return */
 	ast: RootNode;
 	tokens: Token[];
 }
