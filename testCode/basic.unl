@@ -12,20 +12,24 @@ const multiTypeArray = array [true, false, 1, 2, "hi", "hi2"]
 const newArray2 = ["hi", "hi2", "hi3"];
 const multiDimArray = [[["3D Array!"]]]
 const mapy = map [
-	"key" => "value"
+
+	"key" => "value",
+
+	"key2" => "value",
+	"key3" => "value"
 ]
-const test1 = bool is Boolean;
-const test2 = (true || true);
-const test 3 = (true && true);
-const math = 1 + 1 - 1 * 1 / 1 % 1;
-const hexy = 0x000FFF;
-
-func funcy() {
-	return true;
-}
-
 const hi = 
 	"""
 	Multiline Comment
 	  2 Indent
 	"""
+const hexy = 0x000FFF;
+const test2 = (true || true);
+const test 3 = (true && true);
+const math = 1 + 1 - 1 * 1 / 1 % 1;
+
+func funcy() {
+	return true;
+}
+
+// const test1 = bool is Boolean; // disabled, because currently objects are not implemented

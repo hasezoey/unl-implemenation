@@ -1,5 +1,5 @@
 import { astParser } from "../src/astParser";
-import { DeclarationNode, RootNode, StringNode, VariableNode, ArrayExpressionNode, NumberNode, BooleanNode } from "../src/constants/astTypes";
+import { DeclarationNode, RootNode, StringNode, VariableNode, ArrayExpressionNode, NumberNode, BooleanNode, MapExpressionNode, MapSubNode } from "../src/constants/astTypes";
 import { ASTParserError } from "../src/constants/errors";
 import { KeyWords } from "../src/constants/keywords";
 import { Token, TokenTypes } from "../src/constants/tokens";
@@ -101,6 +101,65 @@ describe("AST Parser", () => {
 			expect(ast).toBeObject();
 			expect(ast).toStrictEqual(expected);
 		});
+
+		it("should map array statements (empty)", () => {
+			const tokens = [
+				new Token(TokenTypes.Name, "array"),
+				new Token(TokenTypes.Enclosure, "["),
+				new Token(TokenTypes.Enclosure, "]")
+			];
+
+			const ast = astParser(tokens);
+
+			const expected = new RootNode([
+				new ArrayExpressionNode([])
+			]);
+
+			expect(ast).toBeObject();
+			expect(ast).toStrictEqual(expected);
+		});
+	});
+
+	describe("mapping maps", () => {
+		it("should map map statements", () => {
+			const tokens = [
+				new Token(TokenTypes.Name, "map"),
+				new Token(TokenTypes.Enclosure, "["),
+				new Token(TokenTypes.String, "key"),
+				new Token(TokenTypes.Operator, "="),
+				new Token(TokenTypes.Operator, ">"),
+				new Token(TokenTypes.String, "Hello String"),
+				new Token(TokenTypes.Enclosure, "]")
+			];
+
+			const expected = new RootNode([
+				new MapExpressionNode([
+					new MapSubNode("key", new StringNode("Hello String"))
+				])
+			]);
+
+			const ast = astParser(tokens);
+
+			expect(ast).toBeObject();
+			expect(ast).toStrictEqual(expected);
+		});
+
+		it("should map map statements (empty)", () => {
+			const tokens = [
+				new Token(TokenTypes.Name, "map"),
+				new Token(TokenTypes.Enclosure, "["),
+				new Token(TokenTypes.Enclosure, "]")
+			];
+
+			const expected = new RootNode([
+				new MapExpressionNode([])
+			]);
+
+			const ast = astParser(tokens);
+
+			expect(ast).toBeObject();
+			expect(ast).toStrictEqual(expected);
+		});
 	});
 
 	describe("mapping booleans", () => {
@@ -150,11 +209,11 @@ describe("AST Parser Error", () => {
 	});
 
 	// Disabled because of https://github.com/facebook/jest/issues/7547
-	// it("should error with EOF, if unexpected", () => {
-	// 	const tokens = [
-	// 		new Token(TokenTypes.Enclosure, "[")
-	// 	];
+	it.skip("should error with EOF, if unexpected", () => {
+		const tokens = [
+			new Token(TokenTypes.Enclosure, "[")
+		];
 
-	// 	expect(astParser.bind(undefined, tokens)).toThrowWithMessage(ASTParserError, "Unexpect EOF! (EndOfFile)");
-	// });
+		expect(astParser.bind(undefined, tokens)).toThrowWithMessage(ASTParserError, "Unexpect EOF! (EndOfFile)");
+	});
 });

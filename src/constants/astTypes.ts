@@ -1,9 +1,49 @@
+import { isNullOrUndefined } from "util";
 import { KeyWords } from "./keywords";
 
 // using https://github.com/babel/babylon/blob/master/ast/spec.md as help to design
 
 /** The class all nodes need to inherit from */
-export abstract class ASTNode { }
+export abstract class ASTNode {
+	/**
+	 * Convert all getters & values to a POJO
+	 */
+	public toJSON(): string {
+		/** Current Prototype to check */
+		let proto = Object.getPrototypeOf(this);
+		/** Keys to for getters */
+		let keys: string[] = [];
+
+		// get all getters
+		while (!isNullOrUndefined(proto)) {
+			keys = keys.concat(
+				Object.entries(Object.getOwnPropertyDescriptors(proto))
+					.filter(([key, v]) =>
+						!isNullOrUndefined(v.get)
+						&& key[0] !== "_"
+					)
+					.map(([k, v]) => k)
+			);
+			proto = Object.getPrototypeOf(proto);
+		}
+		const copy: any = Object.assign({}, this);
+
+		// call the getter and assign the value to the copy
+		keys.forEach((key) => {
+			copy[key] = (this as any)[key];
+		});
+
+		// this is because the string will be made by the function that calls toJSON
+		return JSON.parse(JSON.stringify(copy));
+	}
+
+	/**
+	 * Get the Constructor name
+	 */
+	public get type(): string {
+		return this.constructor.name;
+	}
+}
 
 /** Used to defined the Root of the AST */
 export class RootNode extends ASTNode {
@@ -107,6 +147,25 @@ export class UnaryExpressionNode extends Expression {
 export class ArrayExpressionNode extends Expression {
 	constructor(
 		public readonly elements: Expression[] = []
+	) {
+		super();
+	}
+}
+
+/** Used for Maps */
+export class MapExpressionNode extends Expression {
+	constructor(
+		public readonly elements: MapSubNode[] = []
+	) {
+		super();
+	}
+}
+
+/** Map-intermediate node */
+export class MapSubNode extends Expression {
+	constructor(
+		public readonly key: string,
+		public readonly element: Expression
 	) {
 		super();
 	}

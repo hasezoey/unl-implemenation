@@ -1,6 +1,6 @@
 import { isNullOrUndefined } from "util";
 import { logger } from ".";
-import { ArrayExpressionNode, ASTNode, BooleanNode, CommentNode, DeclarationNode, Expression, NumberNode, RootNode, StringNode, VariableNode } from "./constants/astTypes";
+import { ArrayExpressionNode, ASTNode, BooleanNode, CommentNode, DeclarationNode, Expression, NumberNode, RootNode, StringNode, VariableNode, MapExpressionNode, MapSubNode } from "./constants/astTypes";
 import { ASTParserError } from "./constants/errors";
 import { Bool, Brackets, KeyWords } from "./constants/keywords";
 import { Blocks, Misc, Operators, Token, TokenTypes } from "./constants/tokens";
@@ -53,18 +53,17 @@ function walk(curr: ICurrentASTParser): ASTNode | never | undefined {
 	const token = curr.tokens.shift();
 
 	assert(!isNullOrUndefined(token), "Expected \"token\" to be defined!");
+	errorEOF(token);
 
 	switch (token.type) {
+		case TokenTypes.Seperator:
+			return unexpectedToken(token);
 		case TokenTypes.Number:
 			return new NumberNode(token.value);
 		case TokenTypes.String:
 			return new StringNode(token.value);
 		case TokenTypes.Comment:
 			return new CommentNode(token.value);
-		case TokenTypes.EOF:
-			errorEOF(token);
-
-			return;
 		case TokenTypes.EOL:
 			logger.debug("Skipping an EOL");
 
@@ -81,6 +80,7 @@ function walk(curr: ICurrentASTParser): ASTNode | never | undefined {
 					throw new Error("OpenParentheses are currently not supported!");
 			}
 
+			// Handels all Close* or unexpected values
 			throw new ASTParserError("Unkown|Unexpected Enclosure type %s", JSON.stringify(token.value));
 		case TokenTypes.Name:
 			switch (token.value) {
@@ -99,8 +99,7 @@ function walk(curr: ICurrentASTParser): ASTNode | never | undefined {
 						assert(!isNullOrUndefined(nextToken), new ASTParserError("Unexpected undefined Token!"));
 						logger.debug("walk dec next token", nextToken);
 
-						testSwitch:
-						switch (nextToken.type) {
+						testSwitch: switch (nextToken.type) {
 							case TokenTypes.EOF:
 								break loop;
 							case TokenTypes.Seperator:
@@ -156,7 +155,7 @@ function walk(curr: ICurrentASTParser): ASTNode | never | undefined {
 
 					return walkArray(curr, token);
 				case Brackets.Map:
-					throw new Error("\"map\" is currently not implemented!");
+					return walkMap(curr, token);
 			}
 			throw new ASTParserError("Unexpected keyword %s", JSON.stringify(token.value));
 		default:
@@ -281,7 +280,7 @@ function walkArray(curr: ICurrentASTParser, givenToken: Token): ArrayExpressionN
 	assert(token.type === TokenTypes.Enclosure, new ASTParserError("Expected Token type to be \"Enclosure\""));
 	assert(token.value === Blocks.OpenBracket.identifier, new ASTParserError("Expected \"[\""));
 
-	let nextToken: Token | undefined;
+	let nextToken: Token;
 	/** For Error checking (Expecting a seperator) */
 	let hadSeperator = true;
 	/** The node to be returned */
@@ -326,10 +325,99 @@ function walkArray(curr: ICurrentASTParser, givenToken: Token): ArrayExpressionN
  * @param givenToken Current token at time of function call
  * @return Finished Variable node
  */
-// function walkMap(curr: ICurrentASTParser, givenToken: Token): VariableNode {
+function walkMap(curr: ICurrentASTParser, givenToken: Token): MapExpressionNode {
+	logger.debug("walk map");
+	expect(givenToken, Brackets.Map, TokenTypes.Name);
 
-// }
+	let nextToken = makeDefined(curr.tokens.shift());
+	expect(nextToken, Blocks.OpenBracket.identifier, TokenTypes.Enclosure);
 
-function expect(token: Token, id: string): void {
-	assert(token.value === id, new ASTParserError("Expected %s", JSON.stringify(id)));
+	/** For Error checking (Expecting a seperator, this case a ",") */
+	let hadSeperator = true;
+	/** The node to be returned */
+	const mapNode = new MapExpressionNode();
+
+	while (curr.tokens.length > 0) {
+		logger.debug("walk map loop");
+		nextToken = mapNextToken(curr); // at the start of the loop, because of the "continue" statements
+
+		if (nextToken.type === TokenTypes.Seperator) {
+			if (hadSeperator) {
+				return unexpectedToken(nextToken);
+			}
+			expect(nextToken, Misc.Comma.identifier);
+			curr.tokens.shift(); // remove the seperator
+			hadSeperator = true;
+			continue; // made to get the next loop-cycle to check again (for something like ",,,,,")
+		}
+		if (
+			nextToken.type === TokenTypes.Enclosure
+			&& nextToken.value === Blocks.CloseBracket.identifier
+		) {
+			curr.tokens.shift(); // remove the bracket
+			break;
+		}
+
+		if (!hadSeperator) {
+			throw new ASTParserError("Expected an Seperator (%s)!", JSON.stringify(Misc.Comma.identifier));
+		}
+
+		hadSeperator = false; // reset value
+
+		logger.debug("walk map first walk");
+		/** the key for the current MapSubNode */
+		const mapKey = walk(curr);
+		assert(mapKey instanceof StringNode, new ASTParserError("Expected an StringNode for map-key!"));
+		// expect "=" for "=>"
+		expect(mapNextToken(curr, true), Operators.Equals.identifier, TokenTypes.Operator);
+		// expect ">" for "=>"
+		expect(mapNextToken(curr, true), Operators.GreaterThan.identifier, TokenTypes.Operator);
+		/** the element for the current MapSubNode */
+		const mapElement = walk(curr);
+		assert(mapElement instanceof Expression, new ASTParserError("Expected an Expression for map-element!"));
+
+		mapNode.elements.push(new MapSubNode(mapKey.value, mapElement));
+	}
+
+	logger.debug("final map", mapNode);
+
+	return mapNode;
+}
+
+/**
+ * Get next token for walkMap
+ * @param curr Current AST Parser context
+ * @param shift Use shift or [0]?
+ */
+function mapNextToken(curr: ICurrentASTParser, shift: boolean = false): Token {
+	loop: while (curr.tokens.length > 0) {
+		const token = makeDefined(shift ? curr.tokens.shift() : curr.tokens[0]);
+		switch (token.type) {
+			case TokenTypes.EOF:
+				errorEOF(token);
+				break; // otherwise typescript errors with "unwanted fallthrough"
+			case TokenTypes.EOL:
+			case TokenTypes.Empty:
+			case TokenTypes.Comment: // currently, just ignore comments
+				curr.tokens.shift(); // remove tested token
+				continue loop;
+			default:
+				return makeDefined(token);
+		}
+	}
+
+	throw new ASTParserError("Unexpected curr.tokens end!");
+}
+
+/**
+ * Expect Token to have specific value/type
+ * @param token Token to be tested
+ * @param value Expect Token to have a specific value
+ * @param type Expect Token to be of a specific type
+ */
+function expect(token: Token, value: string, type?: TokenTypes): void {
+	if (type) {
+		assert(token.type === type, new ASTParserError("Expected %s to be a TokenType.%s", JSON.stringify(token), type));
+	}
+	assert(token.value === value, new ASTParserError("Expected %s to be %s", JSON.stringify(value), value));
 }
