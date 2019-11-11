@@ -53,6 +53,52 @@ describe("AST Parser", () => {
 			expect(ast).toBeObject();
 			expect(ast).toStrictEqual(expected);
 		});
+
+		it("should map const multiple statements (const)", () => {
+			const tokens = [
+				new Token(TokenTypes.Name, "const"),
+				new Token(TokenTypes.Name, "key"),
+				new Token(TokenTypes.Operator, "="),
+				new Token(TokenTypes.String, "Hello String"),
+				new Token(TokenTypes.Seperator, ","),
+				new Token(TokenTypes.Name, "key1"),
+				new Token(TokenTypes.Operator, "="),
+				new Token(TokenTypes.String, "Hello String1")
+			];
+
+			const ast = astParser(tokens);
+
+			const expected = new RootNode([
+				new DeclarationNode(KeyWords.Const, [
+					new VariableNode("key", new StringNode("Hello String")),
+					new VariableNode("key1", new StringNode("Hello String1"))
+				])
+			]);
+
+			expect(ast).toBeObject();
+			expect(ast).toStrictEqual(expected);
+		});
+
+		it("should map const statement with EOL (const)", () => {
+			const tokens = [
+				new Token(TokenTypes.Name, "const"),
+				new Token(TokenTypes.Name, "key"),
+				new Token(TokenTypes.Operator, "="),
+				new Token(TokenTypes.String, "Hello String"),
+				new Token(TokenTypes.EOL, ""),
+			];
+
+			const ast = astParser(tokens);
+
+			const expected = new RootNode([
+				new DeclarationNode(KeyWords.Const, [
+					new VariableNode("key", new StringNode("Hello String"))
+				])
+			]);
+
+			expect(ast).toBeObject();
+			expect(ast).toStrictEqual(expected);
+		});
 	});
 
 	describe("mapping arrays", () => {
