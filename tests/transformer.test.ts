@@ -1,4 +1,6 @@
 
 describe("Transformer", () => {
-	it("NOTHING", () => { });
+	it("NOTHING", () => {
+		// empty
+	});
 });

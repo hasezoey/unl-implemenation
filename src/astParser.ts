@@ -1,6 +1,6 @@
 import { isNullOrUndefined } from "util";
 import { logger } from ".";
-import { ArrayExpressionNode, ASTNode, BooleanNode, CommentNode, DeclarationNode, Expression, NumberNode, RootNode, StringNode, VariableNode, MapExpressionNode, MapSubNode } from "./constants/astTypes";
+import { ArrayExpressionNode, ASTNode, BooleanNode, CommentNode, DeclarationNode, Expression, MapExpressionNode, MapSubNode, NumberNode, RootNode, StringNode, VariableNode } from "./constants/astTypes";
 import { ASTParserError } from "./constants/errors";
 import { Bool, Brackets, KeyWords } from "./constants/keywords";
 import { Blocks, Misc, Operators, Token, TokenTypes } from "./constants/tokens";

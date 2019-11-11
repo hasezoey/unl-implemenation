@@ -1,9 +1,8 @@
 import { astParser } from "../src/astParser";
-import { DeclarationNode, RootNode, StringNode, VariableNode, ArrayExpressionNode, NumberNode, BooleanNode, MapExpressionNode, MapSubNode } from "../src/constants/astTypes";
+import { ArrayExpressionNode, BooleanNode, DeclarationNode, MapExpressionNode, MapSubNode, NumberNode, RootNode, StringNode, VariableNode } from "../src/constants/astTypes";
 import { ASTParserError } from "../src/constants/errors";
 import { KeyWords } from "../src/constants/keywords";
 import { Token, TokenTypes } from "../src/constants/tokens";
-import { assert } from "../src/utils";
 
 describe("AST Parser", () => {
 	describe("Expressions", () => {
