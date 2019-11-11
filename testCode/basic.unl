@@ -7,8 +7,10 @@ const hi1 = "WWW";
 const stringy = "\n\r\u"; // Full Line Comment
 /* In line Comment */
 const bool = true;
-const newArray = array [1,2,3,4,1000];
+const newArray = array [1,2,3,4,1000,,,,];
+const multiTypeArray = array [true, false, 1, 2, "hi", "hi2"]
 const newArray2 = ["hi", "hi2", "hi3"];
+const multiDimArray = [[["3D Array!"]]]
 const mapy = map [
 	"key" => "value"
 ]

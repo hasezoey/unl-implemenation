@@ -22,6 +22,14 @@ export abstract class Expression extends ASTNode { }
 
 export abstract class Declaration extends Statement { }
 
+export abstract class LiteralNode extends Expression {
+	constructor(
+		public readonly value: string
+	) {
+		super();
+	}
+}
+
 /** Used for func */
 export class FunctionDeclarationNode extends Declaration {
 	constructor(
@@ -56,7 +64,17 @@ export class VariableNode extends ASTNode {
 	}
 }
 
-export abstract class LiteralNode extends Expression {
+/** Used for Numbers */
+export class NumberNode extends LiteralNode { }
+
+/** Used for String */
+export class StringNode extends LiteralNode { }
+
+/** Used for Booleans */
+export class BooleanNode extends LiteralNode { }
+
+/** Used for Comments */
+export class CommentNode extends ASTNode {
 	constructor(
 		public readonly value: string
 	) {
@@ -64,16 +82,31 @@ export abstract class LiteralNode extends Expression {
 	}
 }
 
-/** Used for Numbers */
-export class NumberNode extends LiteralNode { }
-
-/** Used for String */
-export class StringNode extends LiteralNode { }
-
-/** Used for Comments */
-export class CommentNode extends ASTNode {
+/** Used for Logical Operations */
+export class LogicalExpressionsNode extends Expression {
 	constructor(
-		public readonly value: string
+		public readonly operator: string, // add enum?
+		public readonly leftSide: Expression,
+		public readonly rightSide: Expression
+	) {
+		super();
+	}
+}
+
+/** Used for Math */
+export class UnaryExpressionNode extends Expression {
+	constructor(
+		public readonly operator: string, // add enum?
+		public readonly args: Expression
+	) {
+		super();
+	}
+}
+
+/** Used for Arrays */
+export class ArrayExpressionNode extends Expression {
+	constructor(
+		public readonly elements: Expression[] = []
 	) {
 		super();
 	}

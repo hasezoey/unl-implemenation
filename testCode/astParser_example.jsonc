@@ -9,15 +9,16 @@
 				"opType": "const", // or number, what type of assignment is it? (let or const)
 				"params": [
 					{
-						"type": "NumberLiteral",
+						"type": "NumberNode",
 						"value": "1"
 					},
 					{
-						"type": "PlusOperator"
-					},
-					{
-						"type": "NumberLiteral",
-						"value": "2"
+						"type": "UnaryExpressionNode",
+						"operator": "+",
+						"args": {
+							"type": "NumberNode",
+							"value": "2"
+						}
 					}
 				]
 			}
@@ -33,7 +34,7 @@
 				"opType": "const", // or number, what type of assignment is it? (let or const)
 				"params": [
 					{
-						"type": "StringLiteral",
+						"type": "StringNode",
 						"value": "Hi String"
 					}
 				]
@@ -45,15 +46,16 @@
 		"type": "Root",
 		"body": [
 			{
-				"type": "NumberLiteral",
+				"type": "NumberNode",
 				"value": "1"
 			},
 			{
-				"type": "PlusOperator"
-			},
-			{
-				"type": "NumberLiteral",
-				"value": "2"
+				"type": "UnaryExpressionNode",
+				"operator": "+",
+				"args": {
+					"type": "NumberNode",
+					"value": "2"
+				}
 			}
 		]
 	},
@@ -65,15 +67,16 @@
 				"type": "EvaluateExpression",
 				"params": [
 					{
-						"type": "BooleanLiteral",
-						"value": "true"
-					},
-					{
-						"type": "LogicalOROperator"
-					},
-					{
-						"type": "BooleanLiteral",
-						"value": "false"
+						"type": "LogicalExpressionNode",
+						"operator": "||",
+						"leftSide": {
+							"type": "BooleanNode",
+							"value": "true"
+						},
+						"rightSide": {
+							"type": "BooleanNode",
+							"value": "false"
+						}
 					}
 				]
 			}

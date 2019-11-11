@@ -7,7 +7,7 @@ import { ICurrentToken } from "./types";
  * @param err Custom Error
  */
 function assertN(cond: any, err?: Error | string): asserts cond {
-	assert(cond, err);
+	assert.strict.ok(cond, err);
 }
 
 /**
